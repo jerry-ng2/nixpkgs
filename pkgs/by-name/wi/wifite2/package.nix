@@ -1,7 +1,6 @@
 {
   lib,
   fetchFromGitHub,
-  fetchpatch,
   python3Packages,
   wirelesstools,
   aircrack-ng,
@@ -16,44 +15,37 @@
   pixiewps,
   john,
   iw,
+  iproute2,
+  iptables,
   macchanger,
 }:
 
 python3Packages.buildPythonApplication rec {
   pname = "wifite2";
-  version = "2.7.0";
+  version = "3.0.0";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "kimocoder";
     repo = "wifite2";
     rev = version;
-    hash = "sha256-G2AKKZUDS2UQm95TEhGJIucyMRcm7oL0d3J8uduEQhw=";
+    hash = "sha256-zAVZuVpl2/zR7AMkYbpUABWIcUbnUZqXaJa0DSa1VW8=";
   };
 
-  build-system = with python3Packages; [ setuptools ];
-
-  patches = [
-    (fetchpatch {
-      url = "https://salsa.debian.org/pkg-security-team/wifite/raw/debian/2.7.0-1/debian/patches/Disable-aircrack-failing-test.patch";
-      hash = "sha256-BUAowBajfnZ1x6Z3Ce3L0rAERv7v/KrdHcdvKxTxSrM=";
-    })
-    (fetchpatch {
-      url = "https://salsa.debian.org/pkg-security-team/wifite/raw/debian/2.7.0-1/debian/patches/Disable-two-failing-tests.patch";
-      hash = "sha256-wCwfNkF/GvOU5FWPmQ3dJ4Txthz9T9TO2xhSL5vllQc=";
-    })
-    (fetchpatch {
-      url = "https://salsa.debian.org/pkg-security-team/wifite/raw/debian/2.7.0-1/debian/patches/fix-for-new-which.patch";
-      hash = "sha256-8xs+O2ILSRcvsw2pyx2gEBFHdduoI+xmUvDBchKz2Qs=";
-    })
-  ];
+  build-system = with python3Packages; [ poetry-core ];
 
   dependencies = with python3Packages; [
     chardet
+    requests
+    rich
     scapy
+    setuptools
   ];
 
-  pythonRemoveDeps = [ "argparse" ];
+  pythonRelaxDeps = [
+    "chardet"
+    "setuptools"
+  ];
 
   propagatedBuildInputs = [
     aircrack-ng
@@ -69,10 +61,21 @@ python3Packages.buildPythonApplication rec {
     pixiewps
     john
     iw
+    iproute2
+    iptables
     macchanger
   ];
 
   nativeCheckInputs = propagatedBuildInputs ++ [ python3Packages.pytestCheckHook ];
+
+  disabledTests = [
+    # john-jumbo reports "1.9.0-jumbo", not the "version X.Y" format assumed here.
+    "test_john_version_readable"
+    # wpapsk rejects the fixture's four-character password; WPA requires eight.
+    "test_crack_known_key_handshake"
+  ];
+
+  preCheck = "export HOME=$TMPDIR";
 
   meta = {
     homepage = "https://github.com/kimocoder/wifite2";
