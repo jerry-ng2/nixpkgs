@@ -15,10 +15,12 @@
   glib,
   gmobile,
   gnome-desktop,
+  gst_all_1,
   gtk3,
   hunspell,
   json-glib,
   libhandy,
+  libsoup_3,
   libxkbcommon,
   systemdLibs,
   nix-update-script,
@@ -26,21 +28,23 @@
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "stevia";
-  version = "0.54.0";
+  version = "0.59.0";
 
   src = fetchFromGitLab {
     domain = "gitlab.gnome.org";
     owner = "World/Phosh";
     repo = "stevia";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-eCM2PSn0sDnL7iDbgt6phQsGmdeBfkVjOkxt42WxyXo=";
+    hash = "sha256-/yaXYxAQvpaoJqoMI2kP0VnonUpogz4D+eQ7jWAa3gQ=";
     # Workaround for https://github.com/NixOS/nixpkgs/issues/485701
     forceFetchGit = true;
   };
 
   mesonFlags = [
     "-Dc_args=-I${glib.dev}/include/gio-unix-2.0"
+    "-Dgovarnam=disabled"
     "-Dsystemd_user_unit_dir=${placeholder "out"}/lib/systemd/user"
+    "-Duim=disabled"
   ];
 
   postPatch = ''
@@ -64,10 +68,14 @@ stdenv.mkDerivation (finalAttrs: {
     glib.dev
     gmobile
     gnome-desktop
+    gst_all_1.gst-plugins-base
+    gst_all_1.gst-plugins-good
+    gst_all_1.gstreamer
     gtk3
     hunspell
     json-glib
     libhandy
+    libsoup_3
     libxkbcommon
     systemdLibs
     dconf
